@@ -20,6 +20,6 @@
 		$arg_dpi = ($dpi > 0) ? "--resolution {$dpi}" : "";
 
 		header('Content-type: image/png');
-		passthru("scanimage -d {$device} --format {$fileFormat} {$arg_dpi} {$arg_width} {$arg_height}", $ecode);
+		passthru("scanimage -d " . escapeshellarg($device) . " --format {$fileFormat} {$arg_dpi} {$arg_width} {$arg_height}", $ecode);
 	}
 ?>

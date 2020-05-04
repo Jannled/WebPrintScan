@@ -70,9 +70,9 @@
 		function scan()
 		{
 			var device = document.getElementById("scannerDevice");
-			console.log("Scanning on " + device.options[device.selectedIndex].value + ".");
 			var dpi = document.getElementById("scannerDPI");
-			runScan(device.options[device.selectedIndex].value, dpi.options[dpi.selectedIndex].value);
+			console.log("Scanning on " + device.options[device.selectedIndex].value + ".");
+			runScan(device.options[device.selectedIndex].value, "png", dpi.options[dpi.selectedIndex].value);
 		}
 
 		function runScan(device, fileType = "png", dpi = 0, width = 0, height = 0)
