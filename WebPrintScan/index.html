@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title>WebPrintScan</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body onload="getAvailableScanner()">
+	<div class="splitPane">
+		<div class="settingsWindow">
+			<label for="scannerDevice">Scanner</label>
+			<select id="scannerDevice">
+				
+			</select>
+
+			<label for="scannerSource">Quelle</label>
+			<select id="scannerSource">
+				<option value="flatbed">Flachbett</option>
+				<option value="feeder">Einzug</option>
+			</select>
+
+			<label for="scannerPaperFormat">Papiergröße</label>
+			<select id="scannerPaperFormat">
+				<option value="max">Maximale Größe</option>
+				<option value="A4">DIN A4 (21,0cm x 29,7cm)</option>
+				<option value="custom">Zuschneiden</option>
+			</select>
+
+			<label for="scannerDPI">DPI (Auflösung)</label>
+			<select id="scannerDPI">
+				<option value="75">75</option>
+				<option value="150">150</option>
+				<option value="300" selected>300</option>
+				<option value="600">600</option>
+				<option value="1200">1200</option>
+			</select>
+
+			<label for="scannerFileType">Dateityp</label>
+			<select id="scannerFileType">
+				<option value="png">PNG</option>
+				<option value="jpg">JPEG</option>
+				<option value="pdf">PDF</option>
+				<option value="tiff">TIFF</option>
+				<option value="pnm">PNM</option>
+			</select>
+
+			<div id="deviceLoader" class="loader">Loading...</div>
+
+			<div class="toolbar">
+				<button onclick="scan()" class="inSpace">Scannen</button>
+				<button onclick="preview()">Vorschau</button>
+			</div>
+		</div>
+
+		<div class="previewWindow">
+			<p class="centered">Die Vorschau ist noch leer. <br>Bitte scannen sie ein Dokument.</p>
+			<img id="imagePreview" class="preview centered" src="">
+		</div>
+	</div>
+
+	<script>
+		function preview()
+		{
+			var el = document.getElementById("scannerDevice");
+			console.log("Loading preview for scanner " + el.options[el.selectedIndex].value + ".");
+			runScan(el.options[el.selectedIndex].value);
+		}
+
+		function scan()
+		{
+			var device = document.getElementById("scannerDevice");
+			console.log("Scanning on " + device.options[device.selectedIndex].value + ".");
+			var dpi = document.getElementById("scannerDPI");
+			runScan(device.options[device.selectedIndex].value, dpi.options[dpi.selectedIndex].value);
+		}
+
+		function runScan(device, fileType = "png", dpi = 0, width = 0, height = 0)
+		{
+			var fileID = Math.floor(Math.random() * Math.floor(65087));
+
+			var request = {
+				"operation": "scan",
+				"device": device,
+				"fileType": fileType,
+				"dpi": dpi,
+				"width": width,
+				"height": height,
+				"fileID": fileID
+			};
+
+			document.getElementById("imagePreview").src = "/printConnection.php?x=" + JSON.stringify(request);
+/*
+			var xhr = new XMLHttpRequest();
+			xhr.onreadystatechange = function () 
+			{
+				if (this.readyState == 4 && this.status == 200) 
+				{
+					console.log(xhr.responseText);
+					console.log("Scan complete!")
+				}
+			};
+			xhr.open("POST", "printConnection.php", true);
+			xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			xhr.send("x=" + JSON.stringify(request));*/
+		}
+
+		function getAvailableScanner() 
+		{
+			var request = {"operation": "listScanners"};
+
+			var xhr = new XMLHttpRequest();
+			xhr.onreadystatechange = function () 
+			{
+				if (this.readyState == 4 && this.status == 200) 
+				{				
+					var scannerDevs = this.responseText.split('\n');
+					var scannerCount = 0;
+
+					for(var i=0; i<scannerDevs.length; i++)
+					{
+						if(scannerDevs[i].trim().length < 1)
+							continue;
+
+						scannerCount++;
+
+						var scannerDev = scannerDevs[i].trim().split(";");
+						var option = document.createElement("option");
+						option.text = scannerDev[0];
+						option.value = scannerDev[1];
+						document.getElementById("scannerDevice").add(option);
+					}
+
+					if(scannerCount < 1)
+					{						
+						var option = document.createElement("option");
+						option.text = "-- Keinen Scanner gefunden --";
+						document.getElementById("scannerDevice").add(option);
+					}
+
+					document.getElementById("deviceLoader").remove();
+				}
+			};
+			xhr.open("GET", "printConnection.php?x=" + JSON.stringify(request), true);
+			//xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			//xhr.send("x=" + JSON.stringify(request));
+			xhr.send();
+		}
+	</script>
+
+</body>
