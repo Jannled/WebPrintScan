@@ -16,8 +16,9 @@
 
 			<label for="scannerSource">Quelle</label>
 			<select id="scannerSource">
-				<option value="flatbed">Flachbett</option>
-				<option value="feeder">Einzug</option>
+				<option value="">Standard</option>
+				<option value="Flatbed">Flachbett</option>
+				<option value="Automatic Document Feeder">Einzug</option>
 			</select>
 
 			<label for="scannerPaperFormat">Papiergröße</label>
@@ -39,7 +40,7 @@
 			<label for="scannerFileType">Dateityp</label>
 			<select id="scannerFileType">
 				<option value="png">PNG</option>
-				<option value="jpg">JPEG</option>
+				<option value="jpeg">JPEG</option>
 				<option value="pdf">PDF</option>
 				<option value="tiff">TIFF</option>
 				<option value="pnm">PNM</option>
@@ -48,18 +49,29 @@
 			<div id="deviceLoader" class="loader">Loading...</div>
 
 			<div class="toolbar">
-				<button onclick="scan()" class="inSpace">Scannen</button>
-				<button onclick="preview()">Vorschau</button>
+				<button onclick="scan()" class="inSpace scanBtn" disabled>Scannen</button>
+				<button onclick="preview()" class="scanBtn" disabled>Vorschau</button>
 			</div>
 		</div>
 
 		<div class="previewWindow">
 			<p class="centered">Die Vorschau ist noch leer. <br>Bitte scannen sie ein Dokument.</p>
-			<img id="imagePreview" class="preview centered" src="">
+			<img id="imagePreview" class="preview centered" src="" onload="buttonStatus(true)">
 		</div>
 	</div>
 
 	<script>
+		function buttonStatus(enable)
+		{
+			document.getElementById("deviceLoader").style.display = enable ? 'none' : 'block';
+
+			var buttons = document.getElementsByClassName("scanBtn");
+
+			for(var i=0; i<buttons.length; i++)
+				buttons[i].disabled = !enable;
+
+		}
+
 		function preview()
 		{
 			var el = document.getElementById("scannerDevice");
@@ -71,12 +83,19 @@
 		{
 			var device = document.getElementById("scannerDevice");
 			var dpi = document.getElementById("scannerDPI");
+			var fileType = document.getElementById("scannerFileType");
 			console.log("Scanning on " + device.options[device.selectedIndex].value + ".");
-			runScan(device.options[device.selectedIndex].value, "png", dpi.options[dpi.selectedIndex].value);
+			runScan(
+				device.options[device.selectedIndex].value,
+				fileType.options[fileType.selectedIndex].value, 
+				dpi.options[dpi.selectedIndex].value
+			);
 		}
 
 		function runScan(device, fileType = "png", dpi = 0, width = 0, height = 0)
 		{
+			buttonStatus(false);
+
 			var fileID = Math.floor(Math.random() * Math.floor(65087));
 
 			var request = {
@@ -90,23 +109,11 @@
 			};
 
 			document.getElementById("imagePreview").src = "/printConnection.php?x=" + JSON.stringify(request);
-/*
-			var xhr = new XMLHttpRequest();
-			xhr.onreadystatechange = function () 
-			{
-				if (this.readyState == 4 && this.status == 200) 
-				{
-					console.log(xhr.responseText);
-					console.log("Scan complete!")
-				}
-			};
-			xhr.open("POST", "printConnection.php", true);
-			xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-			xhr.send("x=" + JSON.stringify(request));*/
 		}
 
 		function getAvailableScanner() 
 		{
+			console.log("Querying available scanners...");
 			var request = {"operation": "listScanners"};
 
 			var xhr = new XMLHttpRequest();
@@ -138,12 +145,10 @@
 						document.getElementById("scannerDevice").add(option);
 					}
 
-					document.getElementById("deviceLoader").remove();
+					buttonStatus(true);
 				}
 			};
 			xhr.open("GET", "printConnection.php?x=" + JSON.stringify(request), true);
-			//xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-			//xhr.send("x=" + JSON.stringify(request));
 			xhr.send();
 		}
 	</script>
